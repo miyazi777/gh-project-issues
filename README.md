@@ -11,3 +11,6 @@ export GITHUB_ACCESS_TOKEN='<YOUR GITHUB ACCESS TOKEN>'
 ## jtbl
 https://github.com/kellyjonbrazil/jtbl
 
+# install
+git clone https://github.com/miyazi777/gh-project-issues
+mv gh-project-issues ~/.local/share/extensions
