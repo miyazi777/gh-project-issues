@@ -1,0 +1,19 @@
+#!/bin/bash
+
+function list_view () {
+  REMOTE_URL=$(git config --get remote.origin.url)
+  BASE_STR="$(echo $REMOTE_URL | grep :// | sed 's/.*\/\([^ ]*\/[^.]*\).*/\1/' | sed 's/\//,/g')"
+  REPOSITORY_OWNER="$(echo $BASE_STR | cut -f 1 --delim=,)"
+  REPOSITORY_NAME="$(echo $BASE_STR | cut -f 2 --delim=,)"
+  PROJECT_NAME=$1
+  
+  QUERY=`cat <<EOS
+  {"query":"query {repository(name: \"${REPOSITORY_NAME}\", owner: \"${REPOSITORY_OWNER}\") {projects(search: \"${PROJECT_NAME}\", first: 1) {nodes {columns(first: 10) {nodes {name cards {nodes {content {... on Issue {number title}}}}}}}}}}","variables":{}}
+EOS`
+  
+  RESPONSE=$(curl -s 'https://api.github.com/graphql' -H 'Content-Type: application/json' -H 'Accept: application/json' -H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" --data-binary "${QUERY}")
+  
+  echo $RESPONSE | jq -c '.data.repository.projects.nodes[].columns.nodes[] | {status: .name, content: .cards.nodes[].content} | {issue_id: .content.number, status: .status, issue_title: .content.title}' | jtbl
+}
+
+list_view $1
